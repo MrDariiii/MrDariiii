@@ -27,7 +27,8 @@ local blitz = RS:WaitForChild("PortalBlitz")
 local explodiert = SS:WaitForChild("BombeExplodiert")
 local SicherTeleport = require(SS:WaitForChild("SicherTeleport"))
 local lobby = workspace:WaitForChild("Lobby")
-local portal = lobby:WaitForChild("UebungsPortal")
+-- (in manchen Versionen heisst das Portal-Model nur "d")
+local portal = lobby:FindFirstChild("UebungsPortal") or lobby:FindFirstChild("d") or lobby:WaitForChild("UebungsPortal")
 local energie = portal:WaitForChild("Energie")
 
 -- ================= Vorlage: Kopie der Arena-Map =================
@@ -35,6 +36,7 @@ local original
 for _, m in workspace:GetChildren() do
 	if m:IsA("Model") and m:GetAttribute("MapId") == MAP_ID then original = m break end
 end
+original = original or workspace:FindFirstChild("Arena")
 if not original then
 	warn("UebungsArenaServer: keine Map mit MapId '" .. MAP_ID .. "' gefunden")
 	return
