@@ -5,6 +5,8 @@
 --   Uebungspuppe: Schaden = Punkte, Puppe kaputt = +50, kommt nach ein paar Sekunden wieder
 -- Zurueck in die Lobby: LOBBY-Knopf oben (UebungsArenaClient). Wer in der Uebung stirbt, kommt wieder in seine Arena.
 -- Kills, Tode, Coins und Bestenliste zaehlen hier NICHT (Puppen sind keine Spieler/Bots).
+-- Waehrend der Uebung hat der Spieler das Attribut UebungZone = "arena": damit schalten die anderen
+-- Skripte wie frueher im Uebungsbereich ab (keine Kills/Coins, keine Musik, kein Pfeil-Weg zum Arena-Portal).
 if not workspace:GetAttribute("MapsVerteilt") then workspace:GetAttributeChangedSignal("MapsVerteilt"):Wait() end
 
 local Players = game:GetService("Players")
@@ -532,6 +534,7 @@ local function arenaWeg(p)
 	a.map:Destroy()
 	if p.Parent then
 		p:SetAttribute("UebungsArena", nil)
+		p:SetAttribute("UebungZone", nil)
 	end
 end
 
@@ -559,9 +562,15 @@ local function betreten(p)
 	if not ok then warn("[UebungsArena] " .. tostring(a)) return end
 	if not p.Parent then a.map:Destroy(); belegt[a.platz] = nil return end
 	aktiv[p] = a
+	p:SetAttribute("UebungZone", "arena")
 	p:SetAttribute("UebungsArena", true)
 	p:SetAttribute("UebungsPunkte", 0)
-	if not teleportInArena(p, a, true) then arenaWeg(p) return end
+	if not teleportInArena(p, a, true) then
+		warn("[UebungsArena] Teleport fuer " .. p.Name .. " hat nicht geklappt")
+		arenaWeg(p)
+		return
+	end
+	print("[UebungsArena] " .. p.Name .. " ist in seiner Uebungsarena (Platz " .. a.platz .. ")")
 	betretenRemote:FireClient(p)
 	a.loop = task.spawn(function()
 		while aktiv[p] == a do
@@ -573,6 +582,7 @@ local function betreten(p)
 	for _ = 1, ANZAHL_BOMBEN do pcall(bombenNachlegen, p, a) end
 end
 
+print("[UebungsArena] bereit - Uebungsportal bringt in eine eigene Kopie der Map '" .. MAP_ID .. "'")
 energie.Touched:Connect(function(t)
 	local char = t:FindFirstAncestorOfClass("Model")
 	local p = char and Players:GetPlayerFromCharacter(char)
